@@ -56,7 +56,6 @@ Para disfrutar de Claude Code, solo necesitas dos pasos:
 
 1.  **Activa el Proxy (Pestaña 1):**
     ```bash
-    cd ~/free-claude-code && python server.py
     ```
 2.  **Lanza Claude (Pestaña 2):**
     ```bash

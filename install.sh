@@ -66,10 +66,21 @@ proot-distro login ubuntu -- bash -c "
     npm install -g @anthropic-ai/claude-code
 "
 
-# 6. Creación del acceso directo (Bridge)
-echo "🌉 Creando comando 'claude'..."
+# 6. Creación del acceso directo (Lanzador Inteligente)
+echo "🌉 Creando comando todo-en-uno..."
 mkdir -p ~/.local/bin
 cat << 'EOF' > ~/.local/bin/claude
+#!/bin/bash
+pkill -f "python server.py" 2>/dev/null || true
+cd ~/free-claude-code
+python server.py > /dev/null 2>&1 &
+PROXY_PID=$!
+cleanup() { kill $PROXY_PID 2>/dev/null || true; exit; }
+trap cleanup SIGINT SIGTERM
+for i in {1..10}; do curl -s http://localhost:8082/v1/models > /dev/null && break; sleep 1; done
+proot-distro login ubuntu -- bash -c "export ANTHROPIC_AUTH_TOKEN=freecc; export ANTHROPIC_BASE_URL=http://127.0.0.1:8082; claude "$@""
+cleanup
+EOF
 #!/bin/bash
 proot-distro login ubuntu -- bash -c "export ANTHROPIC_AUTH_TOKEN=freecc; export ANTHROPIC_BASE_URL=http://127.0.0.1:8082; claude \"\$@\""
 EOF
