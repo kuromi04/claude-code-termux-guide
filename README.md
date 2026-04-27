@@ -68,7 +68,7 @@ Este proyecto es posible gracias a:
 
 *   👤 **Autor Principal:** [kuromi04](https://github.com/kuromi04) 
 *   📡 **Core Proxy:** Basado en el motor de [Alishahryar1/free-claude-code](https://github.com/Alishahryar1/free-claude-code).
-*   👥 **Comunidad:** Gratitud especial a la comunidad de **ivan3bycinderella** por su constante innovación y soporte.
+*   👥 **Comunidad:** Gratitud especial a la comunidad de **[ivan3bycinderella](https://github.com/ivam3)** por su constante innovación y soporte.
 
 ---
 <p align="center">
