@@ -14,7 +14,7 @@ Una solución profesional y automatizada para ejecutar el CLI oficial de **Claud
 *   🤖 **Motor de IA de Vanguardia:** Integración nativa con la API de **NVIDIA NIM** (Llama 3.1 70B/405B).
 *   ⚡ **Instalación Relámpago:** Script "One-Tap" que configura todo por ti.
 *   🐧 **Entorno Híbrido:** Usa Ubuntu vía `proot-distro` para garantizar compatibilidad con binarios `glibc`.
-*   🛠️ **Mobile Optimized:** Mocking inteligente de dependencias (`tiktoken`) para evitar fallos de compilación en ARM64.
+*   🛠️ **Lanzador Todo-en-Uno:** El proxy se inicia y se cierra automáticamente al usar Claude. Una sola pantalla.
 *   🛡️ **Seguridad:** Manejo seguro de variables de entorno y API keys.
 
 ---
@@ -52,15 +52,13 @@ curl -sSL https://raw.githubusercontent.com/kuromi04/claude-code-termux-guide/ma
 
 ## 🖥️ Modo de Uso
 
-Para disfrutar de Claude Code, solo necesitas dos pasos:
+Gracias al lanzador inteligente, ahora es mucho más simple:
 
-1.  **Activa el Proxy (Pestaña 1):**
-    ```bash
-    ```
-2.  **Lanza Claude (Pestaña 2):**
+1.  **Ejecuta el comando único:**
     ```bash
     claude
     ```
+    *El script iniciará el proxy en segundo plano, abrirá Claude Code y cerrará el proxy al finalizar la sesión.*
 
 ---
 

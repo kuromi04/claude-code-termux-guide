@@ -42,8 +42,12 @@ sed -i 's/import tiktoken/try:\n    import tiktoken\nexcept ImportError:\n    im
 # Corregir errores de sintaxis en excepciones
 find . -name "*.py" -exec sed -i 's/except \([a-zA-Z0-9._]*\), \([a-zA-Z0-9._]*\):/except (\1, \2):/g' {} +
 
-# Añadir future annotations
-sed -i '1i from __future__ import annotations' config/settings.py providers/error_mapping.py providers/openai_compat.py providers/rate_limit.py
+# Añadir future annotations (si no existen)
+for file in config/settings.py providers/error_mapping.py providers/openai_compat.py providers/rate_limit.py; do
+    if ! grep -q "from __future__ import annotations" "$file"; then
+        sed -i '1i from __future__ import annotations' "$file"
+    fi
+done
 
 # Fix específico para la carga de API Key
 sed -i 's/nvidia_nim_api_key: str = ""/nvidia_nim_api_key: str = Field(default="", validation_alias="NVIDIA_NIM_API_KEY")/g' config/settings.py
@@ -66,7 +70,7 @@ proot-distro login ubuntu -- bash -c "
     npm install -g @anthropic-ai/claude-code
 "
 
-# 6. Creación del acceso directo (Lanzador Inteligente)
+# 6. Creación del acceso directo (Lanzador Inteligente Todo-en-Uno)
 echo "🌉 Creando comando todo-en-uno..."
 mkdir -p ~/.local/bin
 cat << 'EOF' > ~/.local/bin/claude
@@ -78,17 +82,13 @@ PROXY_PID=$!
 cleanup() { kill $PROXY_PID 2>/dev/null || true; exit; }
 trap cleanup SIGINT SIGTERM
 for i in {1..10}; do curl -s http://localhost:8082/v1/models > /dev/null && break; sleep 1; done
-proot-distro login ubuntu -- bash -c "export ANTHROPIC_AUTH_TOKEN=freecc; export ANTHROPIC_BASE_URL=http://127.0.0.1:8082; claude "$@""
-cleanup
-EOF
-#!/bin/bash
 proot-distro login ubuntu -- bash -c "export ANTHROPIC_AUTH_TOKEN=freecc; export ANTHROPIC_BASE_URL=http://127.0.0.1:8082; claude \"\$@\""
+cleanup
 EOF
 chmod +x ~/.local/bin/claude
 
-echo "✅ ¡INSTALACIÓN COMPLETADA!"
+echo "✅ ¡INSTALACIÓN COMPLETADA POR KUROMI04!"
 echo "-------------------------------------------------------"
 echo "1. Configura tu API Key en: ~/free-claude-code/.env"
-echo "2. Inicia el proxy: cd ~/free-claude-code && python server.py"
-echo "3. En otra terminal usa: claude"
+echo "2. Usa el comando directamente: claude"
 echo "-------------------------------------------------------"
