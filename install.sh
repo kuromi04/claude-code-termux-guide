@@ -63,27 +63,66 @@ if ! proot-distro list | grep -q "installed.*ubuntu"; then
 fi
 
 echo "🌐 Instalando Claude Code dentro de Ubuntu..."
+# Detectar arquitectura para nodejs
+ARCH=$(uname -m)
+NODE_VER="20"
 proot-distro login ubuntu -- bash -c "
-    apt update && apt install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt install -y nodejs && \
+    apt update && apt install -y curl gnupg && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo \"deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VER.x nodistro main\" | tee /etc/apt/sources.list.d/nodesource.list && \
+    apt update && apt install -y nodejs && \
     npm install -g @anthropic-ai/claude-code
 "
 
 # 6. Creación del acceso directo (Lanzador Inteligente Todo-en-Uno)
-echo "🌉 Creando comando todo-en-uno..."
+echo "Bridge Creando comando todo-en-uno..."
 mkdir -p ~/.local/bin
 cat << 'EOF' > ~/.local/bin/claude
 #!/bin/bash
-pkill -f "python server.py" 2>/dev/null || true
-cd ~/free-claude-code
-python server.py > /dev/null 2>&1 &
-PROXY_PID=$!
-cleanup() { kill $PROXY_PID 2>/dev/null || true; exit; }
-trap cleanup SIGINT SIGTERM
-for i in {1..10}; do curl -s http://localhost:8082/v1/models > /dev/null && break; sleep 1; done
-proot-distro login ubuntu -- bash -c "export ANTHROPIC_AUTH_TOKEN=freecc; export ANTHROPIC_BASE_URL=http://127.0.0.1:8082; claude \"\$@\""
-cleanup
+# Lanzador inteligente de Claude Code para Termux
+# Maneja el proxy automáticamente y asegura persistencia
+
+PROXY_DIR="$HOME/free-claude-code"
+PROXY_PORT=8082
+
+# 1. Iniciar/Verificar Proxy
+if ! lsof -Pi :$PROXY_PORT -sTCP:LISTEN -t >/dev/null ; then
+    echo "🚀 Iniciando proxy free-claude-code..."
+    pkill -f "python server.py" 2>/dev/null || true
+    cd "$PROXY_DIR"
+    python server.py > "$HOME/.claude_proxy.log" 2>&1 &
+    PROXY_PID=$!
+    
+    # Esperar a que el proxy esté saludable
+    echo -n "⏳ Esperando al proxy..."
+    MAX_RETRIES=15
+    COUNT=0
+    while ! curl -s "http://127.0.0.1:$PROXY_PORT/v1/models" > /dev/null; do
+        sleep 1
+        echo -n "."
+        ((COUNT++))
+        if [ $COUNT -ge $MAX_RETRIES ]; then
+            echo -e "\n❌ Error: El proxy no inició a tiempo. Revisa ~/.claude_proxy.log"
+            exit 1
+        fi
+    done
+    echo " ¡Listo!"
+fi
+
+# 2. Sincronizar API Key si existe en .env local
+if [ -f "$PROXY_DIR/.env" ]; then
+    export $(grep -v '^#' "$PROXY_DIR/.env" | xargs)
+fi
+
+# 3. Lanzar Claude dentro de Ubuntu
+# Usamos --bind para compartir carpetas si es necesario en el futuro
+proot-distro login ubuntu -- bash -c "
+    export ANTHROPIC_AUTH_TOKEN=freecc; 
+    export ANTHROPIC_BASE_URL=http://127.0.0.1:$PROXY_PORT; 
+    export CLAUDE_CONFIG_DIR=/home/$(whoami)/.claude;
+    claude \"\$@\"
+"
 EOF
 chmod +x ~/.local/bin/claude
 
