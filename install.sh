@@ -4,7 +4,7 @@
 # Claude Code Termux Auto-Installer
 # Creado por: kuromi04
 # Basado en: Alishahryar1/free-claude-code
-# Agradecimientos: Comunidad ivan3bycinderella
+# Agradecimientos: Comunidad ivam3bycinderella
 # ==========================================
 
 set -e
